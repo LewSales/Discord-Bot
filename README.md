@@ -25,14 +25,14 @@ This bot brings **price data from multiple sources**, **faucet automation**, **c
 ### 1. **Clone the Project**
 
 ```sh
-git clone https://github.com/your-username/winlew-bot.git
+git clone https://github.com/lewsales/discord-bot.git
 cd winlew-bot
 ```
 
 ### 2. **Install Dependencies**
 
 ```sh
-npm install
+yarn install
 ```
 
 ### 3. **Configuration**
@@ -149,7 +149,7 @@ Open an issue or fork and make a PR.
 ## 📣 Credits
 
 - $WinLEW Community  
-- [Your Discord](http://your-discord-link)  
+- [LETS EVERYONE WIN Discord](https://discord.gg/7mZ2JP87JS)
 - [Official Site](http://WinLEW.xyZ)
 
 ---
