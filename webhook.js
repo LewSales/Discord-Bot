@@ -48,7 +48,7 @@ client.on('messageCreate', async (message) => {
         fetchRaydiumPrice(),
         fetchPumpFunPrice()
       ]);
-      return message.reply(`🏷️ Prices:\n• Raydium: $${ray.toFixed(6)}\n• PumpFun: $${pump.toFixed(6)}`);
+      return message.reply(`🏷️ Prices:\n• Raydium: $${ray.price.toFixed(6)}\n• PumpFun: $${pump.price.toFixed(6)}`);
     } catch (err) {
       console.error(err);
       return message.reply('❌ Failed to fetch prices.');
