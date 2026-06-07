@@ -1,20 +1,18 @@
-#!/usr/bin/env node
 // sendEithertoken.js
-
-const fs = require('fs');
-const path = require('path');
-const {
+import fs from 'fs';
+import path from 'path';
+import {
   Connection,
   PublicKey,
   Keypair,
   clusterApiUrl,
-} = require('@solana/web3.js');
-const {
+} from '@solana/web3.js';
+import {
   getOrCreateAssociatedTokenAccount,
   transfer,
-  TOKEN_2022_PROGRAM_ID,          // ← import this
-  ASSOCIATED_TOKEN_PROGRAM_ID,    // ← and this
-} = require('@solana/spl-token');
+  TOKEN_2022_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
 
 
 

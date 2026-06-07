@@ -1,5 +1,6 @@
 // webhook.js
-import { fetchRaydiumPrice, fetchPumpFunPrice } from './priceTracker.js';
+import { fetchRaydiumPrice } from './raydium.js';
+import { fetchPumpFunPrice } from './pumpfun.js';
 
 import { Client, GatewayIntentBits, WebhookClient } from 'discord.js';
 import dotenv from 'dotenv';
@@ -40,7 +41,8 @@ client.on('messageCreate', async (message) => {
   // 3) (Optional) Command to post a price alert on demand
   if (message.content === '!price') {
     // assume you’ve exported your fetchers from priceTracker.js:
-    const { fetchRaydiumPrice, fetchPumpFunPrice } = await import('./priceTracker.js');
+    const { fetchRaydiumPrice } = await import('./raydium.js');
+    const { fetchPumpFunPrice } = await import('./pumpfun.js');
     try {
       const [ray, pump] = await Promise.all([
         fetchRaydiumPrice(),
