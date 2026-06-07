@@ -43,8 +43,8 @@ function loadKeypair(filename) {
 const FAUCET_WINLEW   = loadKeypair('id_winlew.json');
 const FAUCET_SPLTOKEN = loadKeypair('id_spltoken.json');
 
-const WINLEW_MINT   = new PublicKey('DnrcdQVH7fdbmm4EyD7LjT9mNNozF5HuWMeKcpvjpump');
-const SPLTOKEN_MINT = new PublicKey('6F53Ywxpmzq7F9fusLfBks6cZyhNAn7YYPMbR8qSqpqe');
+const WINLEW_MINT   = new PublicKey(process.env.WINLEW_MINT   || 'DnrcdQVH7fdbmm4EyD7LjT9mNNozF5HuWMeKcpvjpump');
+const SPLTOKEN_MINT = new PublicKey(process.env.SPLTOKEN_MINT || '6F53Ywxpmzq7F9fusLfBks6cZyhNAn7YYPMbR8qSqpqe');
 
 const DECIMALS_WINLEW   = 6;
 const DECIMALS_SPLTOKEN = 6;

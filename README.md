@@ -1,157 +1,188 @@
-# 💰 WinLEW Discord Bot
+# WinLEW Discord Bot
 
-Your all-in-one, self-hosted Discord bot for the $WinLEW Solana token.  
-This bot brings **price data from multiple sources**, **faucet automation**, **community engagement tools**, and **admin features** to your Discord server—fully open, transparent, and extensible.
-
----
-
-## 🌟 Features
-
-- **Live $WinLEW Price** from GeckoTerminal, Raydium, Pump.fun, DexScreener, and more.
-- **Aggregated stats**: `!data` command for all price sources at once.
-- **Detailed per-source stats**: `!gdata`, `!ddata`, `!rdata`, `!pdata` commands.
-- **User faucet** with 24h cooldown—one claim per wallet per day.
-- **Balance checking** for Solana addresses and .sol domains.
-- **Total supply** info and airdrop registration.
-- **Buy/swap quicklinks** for all major DEXes and sites.
-- **MOD/admin tools** and bot restart for safe management.
-- **Automated Twitter/X announcements** and live channel price updates.
-- **All code modular, extensible, and easy to upgrade.**
+Your all-in-one, self-hosted Discord bot for the $WinLEW Solana token.
+Brings **live price data from multiple sources**, **faucet automation**, **community engagement tools**, and **admin features** to your Discord server — fully open, transparent, and extensible.
 
 ---
 
-## 🚀 Getting Started
+## Features
 
-### 1. **Clone the Project**
+- **Live price** from GeckoTerminal, Raydium, Pump.fun, DexScreener, and Solscan
+- **Aggregated stats**: `!data` for all price sources at once
+- **Per-source stats**: `!gdata`, `!ddata`, `!rdata`, `!pdata`, `!sdata`
+- **User faucet** with 24h per-wallet cooldown
+- **Balance checking** for Solana addresses and .sol domains
+- **Token supply** info and airdrop registration
+- **Buy/swap quicklinks** for major DEXes and explorers
+- **Mod/admin tools** with role-gated commands
+- **Automated Twitter/X announcements** and live voice channel price updates
+- **Docker-ready** for easy self-hosting
+
+---
+
+## Getting Started
+
+### 1. Clone the repo
 
 ```sh
 git clone https://github.com/lewsales/discord-bot.git
-cd winlew-bot
+cd discord-bot
 ```
 
-### 2. **Install Dependencies**
+### 2. Install dependencies
 
 ```sh
-yarn install
+npm install
 ```
 
-### 3. **Configuration**
+### 3. Configure environment
 
-1. **Copy the `.env.example` to `.env`** and fill out all required values:
+Copy the example env file and fill in your values:
 
-   ```
-   DISCORD_BOT_TOKEN=your-bot-token
-   WINLEW_MINT=your-mint-address
-   BOT_KEYPAIR_PATH=./your-bot-keypair.json
-   RPC_URL=https://api.mainnet-beta.solana.com
-   GECKO_PAIR_ID=...
-   RAYDIUM_POOL_ID=...
-   PUMPFUN_POOL_ID=...
-   DEXSCREENER_PAIR_ID=...
-   DRIP_AMOUNT=1000
-   MOD_IDS=comma,separated,discord,user,ids
-   VOICE_CHANNEL_ID=...
-   PRICE_CHANNEL_ID=...
-   ALERT_CHANNEL_ID=...
-   VOICE_WEBHOOK_URL=...
-   PRICE_WEBHOOK_URL=...
-   GENERAL_WEBHOOK_URL=...
-   ANNOUNCEMENT_WEBHOOK_URL=...
-   TWITTER_BEARER_TOKEN=...
-   ```
+```sh
+cp .env.example .env
+```
 
-2. **Generate a Solana keypair** (if needed) and fund it for gas.
+See `.env.example` for all required and optional variables with descriptions.
 
-3. **(Optional) Set up Twitter/X API credentials** for tweet relaying.
+### 4. Set up the bot's Solana wallet
 
-### 4. **Run the Bot**
+Generate a new keypair and fund it with a small amount of SOL for transaction fees:
+
+```sh
+solana-keygen new -o ./bot-keypair.json
+```
+
+> **Keep `bot-keypair.json` private. Never commit it. It is gitignored by default.**
+
+### 5. Initialize runtime data files
+
+The bot uses JSON files for persistent state. Create them from the templates:
+
+```sh
+cp registrations.example.json registrations.json
+cp airdrops.example.json airdrops.json
+cp faucet_claims.example.json faucet_claims.json
+cp subscriptions.example.json subscriptions.json
+```
+
+### 6. Run the bot
 
 ```sh
 npm start
 ```
 
+For production, run under `pm2` or Docker for auto-restart on crash.
+
 ---
 
-## 🕹️ Commands
+## Docker
+
+```sh
+docker build -t winlew-bot .
+docker run --env-file .env winlew-bot
+```
+
+---
+
+## Commands
 
 **User Commands**
-- `!balance <address|.sol>` — Check your $WinLEW balance
-- `!faucet <address|.sol>` — Claim free $WinLEW (once per 24h)
-- `!register <address|.sol>` — Register for airdrops
-- `!price` — Current $WinLEW price (best source)
-- `!data` — Price from ALL sources (detailed)
-- `!gdata` — GeckoTerminal stats  
-- `!ddata` — DexScreener stats  
-- `!rdata` — Raydium stats  
-- `!pdata` — Pump.fun stats  
-- `!supply` — Total token supply
-- `!uptime` — Bot uptime
-- `!links` — All project links
-- `!quicklinks` — Fast access buy/swap/chart links
-- `!buy` / `!dexscreener` / `!swap` / `!rugcheck` / `!geckoterminal` / `!cmc` / `!website` — Direct links
+| Command | Description |
+|---------|-------------|
+| `!balance <address\|.sol>` | Check $WinLEW balance |
+| `!faucet <address\|.sol>` | Claim free $WinLEW (once per 24h) |
+| `!register <address\|.sol>` | Register for airdrops |
+| `!price` | Current price (best source) |
+| `!data` | Price from all sources (detailed) |
+| `!gdata` | GeckoTerminal stats |
+| `!ddata` | DexScreener stats |
+| `!rdata` | Raydium stats |
+| `!pdata` | Pump.fun stats |
+| `!sdata` | Solscan stats |
+| `!supply` | Total token supply |
+| `!uptime` | Bot uptime |
+| `!links` | All project links |
+| `!quicklinks` | Fast access buy/swap/chart links |
+| `!buy` `!dexscreener` `!swap` `!rugcheck` `!geckoterminal` `!cmc` `!website` | Direct links |
+| `!help` | User help menu |
 
-**Moderator/Admin Commands**
-- `!restart` — Restart the bot (mod only)
-- `!wallet` — Show bot wallet
-- `!modhelp` — Admin menu
-- `!debugprice` — Debug/fetch all price sources (mod only)
-
----
-
-## ⚡ Tech Stack
-
-- Node.js (ESM)
-- Discord.js v14
-- Solana web3.js & SPL-Token
-- dotenv for config
-- Modular fetchers for price APIs (GeckoTerminal, Raydium, DexScreener, Pump.fun, Solscan)
-- Twitter API v2 (optional)
-- JSON for persistent data (faucet claims, etc.)
-- Cron for scheduled channel updates
+**Moderator/Admin Commands** *(requires your Discord ID in `MOD_IDS`)*
+| Command | Description |
+|---------|-------------|
+| `!restart` | Restart the bot process |
+| `!wallet` | Show bot's Solana address |
+| `!debugprice` | Fetch and display all price source diagnostics |
+| `!send <address\|.sol>` | Send tokens to an address (24h cooldown) |
+| `!modhelp` | Admin help menu |
 
 ---
 
-## 🛠️ File Structure
+## Tech Stack
+
+- **Node.js** (ESM modules)
+- **Discord.js** v14
+- **Solana web3.js** & SPL-Token
+- **Raydium SDK** for pool data
+- **dotenv** for configuration
+- **node-cron** for scheduled updates
+- **Twitter API v2** (optional, for announcement relaying)
+
+---
+
+## File Structure
 
 ```
 .
 ├── bot.js                  # Main Discord bot logic
-├── priceTracker.js         # Aggregated price fetching logic
+├── priceTracker.js         # Multi-source price aggregator with fallback
 ├── gecko.js                # GeckoTerminal price fetcher
 ├── raydium.js              # Raydium price fetcher
 ├── pumpfun.js              # Pump.fun price fetcher
 ├── dexscreener.js          # DexScreener price fetcher
-├── solscan.js              # (Optional) Solscan price fetcher
-├── faucet.js               # Faucet and drip logic
-├── .env                    # Environment config
-└── README.md
+├── solscan.js              # Solscan price fetcher
+├── faucet.js               # Faucet/drip logic
+├── sendWinlew.js           # Token sending helper
+├── helpers.js              # Shared utilities
+├── .env.example            # Environment variable template
+├── bot-keypair.example.json  # Keypair file format reference
+├── *.example.json          # Templates for runtime data files
+└── Dockerfile
 ```
 
 ---
 
-## 🧠 Notes & Best Practices
+## Security Notes
 
-- **Keep your .env safe!** Never commit it with secrets.
-- Run the bot under `pm2` or Docker for auto-restart on crash.
-- Back up your keypair file securely.
-- Update dependencies regularly for security.
-- Extend or modify fetchers as new price APIs emerge.
-
----
-
-## 🤝 Contributing
-
-PRs, feature requests, and feedback are welcome!
-Open an issue or fork and make a PR.
+- **Never commit `.env` or `bot-keypair.json`** — both are gitignored.
+- Store the bot keypair somewhere secure and only fund it with what it needs for gas.
+- Set `MOD_IDS` to only the Discord user IDs you trust with admin commands.
+- For production, use a dedicated RPC endpoint (QuickNode, Helius, etc.) instead of the public mainnet node.
 
 ---
 
-## 📣 Credits
+## Troubleshooting
 
-- $WinLEW Community  
+**Bot doesn't start**: Run `npm start` and check the `.env loaded` output — any `❌ Rejected` line means a required env var is missing.
+
+**Faucet fails**: Ensure the keypair wallet has SOL for transaction fees, and the `WINLEW_MINT` address is correct.
+
+**Price commands return nothing**: Verify your pool/pair IDs in `.env` against each platform's UI for your token.
+
+---
+
+## Contributing
+
+PRs, feature requests, and feedback are welcome. Open an issue or fork and submit a PR.
+
+---
+
+## Credits
+
+- $WinLEW Community
 - [LETS EVERYONE WIN Discord](https://discord.gg/7mZ2JP87JS)
 - [Official Site](http://WinLEW.xyZ)
 
 ---
 
-*Built with ❤️ by passionate builders for the #WinLEW fam.*
+*Built with love by passionate builders for the #WinLEW fam.*

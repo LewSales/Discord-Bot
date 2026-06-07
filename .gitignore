@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Environment & secrets
+.env
+*.env
+
+# Solana keypairs — NEVER commit real keypairs
+bot-keypair.json
+*-keypair.json
+id.json
+*.json.key
+
+# Persistent runtime data (user data & state — not for version control)
+registrations.json
+airdrops.json
+faucet_claims.json
+subscriptions.json
+twitterUserId.json
+lastTweet.json
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+dist/
+build/
