@@ -199,6 +199,7 @@ function loadLastTweetId() {
 // ---- Commands ----
 const COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const lastUsed = new Map();
+const faucetInProgress = new Set();
 
 client.on('messageCreate', async (message) => {
   if (message.author.bot || !message.content.startsWith(PREFIX)) return;
@@ -288,9 +289,16 @@ client.on('messageCreate', async (message) => {
           await message.reply('❌ Invalid address or .sol domain');
           break;
         }
+        const addrStr = recipient.toBase58();
+        if (faucetInProgress.has(addrStr)) {
+          await message.reply('⏳ A faucet claim is already in progress for this address. Please wait.');
+          break;
+        }
+        faucetInProgress.add(addrStr);
+        try {
         const claims = getFaucetClaims();
         const nowSec = Math.floor(Date.now() / 1000);
-        const prev = claims[recipient.toBase58()];
+        const prev = claims[addrStr];
         if (prev && nowSec - prev < 86400) {
           await message.reply('⏳ This address already claimed the faucet in the past 24h!💥');
           break;
@@ -303,7 +311,7 @@ client.on('messageCreate', async (message) => {
         lastUsed.set(cooldownKey, now + COOLDOWN_MS);
         try {
           const sig = await dripTokens(connection, BOT_KEYPAIR, recipient);
-          setFaucetClaim(recipient.toBase58(), nowSec);
+          setFaucetClaim(addrStr, nowSec);
           await message.reply(`💧 Dripped! Tx: <https://solscan.io/tx/${sig}>\n_If you don't see the transaction on Solscan right away, please wait a minute and check again!_`);
         } catch (err) {
           if (
@@ -318,6 +326,9 @@ client.on('messageCreate', async (message) => {
           }
           console.error(`[${new Date().toISOString()}] Faucet ERROR for ${address}:`, err);
           await message.reply(`❌ ${err.message}`);
+        }
+        } finally {
+          faucetInProgress.delete(addrStr);
         }
         break;
       }
@@ -356,7 +367,7 @@ client.on('messageCreate', async (message) => {
           );
           const sig = await splTokenPkg.transfer(
             connection, BOT_KEYPAIR, fromAta.address, toAta.address,
-            BOT_KEYPAIR.publicKey, DRIP_AMOUNT * 1e6
+            BOT_KEYPAIR.publicKey, DRIP * 1e6
           );
           await message.reply(
             `✅ Sent ${DRIP_AMOUNT} WinLEW! Tx: <https://solscan.io/tx/${sig}>\n_If you don't see the transaction on Solscan right away, please wait a minute and check again!_`
@@ -382,13 +393,20 @@ client.on('messageCreate', async (message) => {
           await message.reply('Usage: !register <Your Solana ADDRESS or .sol>');
           break;
         }
+        let resolved;
+        try { resolved = await resolveSolanaAddress(address); }
+        catch {
+          await message.reply('❌ Invalid address or .sol domain');
+          break;
+        }
+        const resolvedStr = resolved.toBase58();
         ['registrations.json', 'airdrops.json'].forEach(file => {
-  const data = loadJson(file);
-  const list = Array.isArray(data) ? data : [];
-  list.push(address);
-  writeJson(file, list);
-});
-await message.reply(`✅ Registered ${address}`);
+          const data = loadJson(file);
+          const list = Array.isArray(data) ? data : [];
+          if (!list.includes(resolvedStr)) list.push(resolvedStr);
+          writeJson(file, list);
+        });
+        await message.reply(`✅ Registered ${resolvedStr}`);
         break;
       }
       case 'price': {
@@ -511,41 +529,39 @@ await message.reply(`✅ Registered ${address}`);
         }
         let out = '🛠️ Debugging price sources...\n';
         try {
-          // Dynamic import with cache bust
-          const m = await import('./priceTracker.js?' + Date.now());
           try {
             const solscan = await fetchSolScanPrice(process.env.SOLSCAN_POOL_ID);
-            out += `Solscan ✅: $${solscan}\n`;
+            out += `Solscan ✅: $${solscan.price?.toFixed(6) ?? 'N/A'}\n`;
           } catch (e) {
             out += 'Solscan ❌: ' + e.message + '\n';
           }
           try {
             const raydium = await fetchRaydiumPrice(process.env.RAYDIUM_POOL_ID);
-            out += `💱Raydium ✅: $${raydium}\n`;
+            out += `💱Raydium ✅: $${raydium.price?.toFixed(6) ?? 'N/A'}\n`;
           } catch (e) {
             out += '💱Raydium ❌: ' + e.message + '\n';
           }
           try {
             const pumpfun = await fetchPumpFunPrice(process.env.PUMPFUN_POOL_ID);
-            out += `🧑‍🚀Pump.Fun ✅: $${pumpfun}\n`;
+            out += `🧑‍🚀Pump.Fun ✅: $${pumpfun.price?.toFixed(6) ?? 'N/A'}\n`;
           } catch (e) {
             out += '🧑‍🚀Pump.Fun ❌: ' + e.message + '\n';
           }
           try {
             const dexscreener = await fetchDexScreenerPrice(process.env.DEXSCREENER_PAIR_ID);
-            out += `📊Dexscreener ✅: $${dexscreener}\n`;
+            out += `📊Dexscreener ✅: $${dexscreener.price?.toFixed(6) ?? 'N/A'}\n`;
           } catch (e) {
             out += '📊Dexscreener ❌: ' + e.message + '\n';
           }
           try {
             const gecko = await fetchGeckoTerminalPrice(process.env.GECKO_PAIR_ID);
-            out += `🦎GeckoTerminal ✅: $${gecko}\n`;
+            out += `🦎GeckoTerminal ✅: $${gecko.price?.toFixed(6) ?? 'N/A'}\n`;
           } catch (e) {
             out += '🦎GeckoTerminal ❌: ' + e.message + '\n';
           }
           await message.reply(out.length > 1900 ? out.slice(0, 1900) + '…' : out);
         } catch (err) {
-          await message.reply('❌ Error loading price tracker module: ' + (err.message || err));
+          await message.reply('❌ Error fetching price data: ' + (err.message || err));
         }
       break;
       }
@@ -637,21 +653,19 @@ case 'pdata': {
 }
 case 'sdata': {
   try {
-    const { fetchPumpFunPrice } = await import('./pumpfun.js');
     const info = await fetchSolScanPrice(SOLSCAN_POOL_ID);
     if (!info.price || isNaN(info.price)) {
-      await message.reply('❌ Could not fetch a valid Pump.Fun price. Try again later!');
+      await message.reply('❌ Could not fetch a valid Solscan price. Try again later!');
       break;
     }
     await message.reply(
-      `🧑‍🚀 **Pump.fun $WinLEW Stats**\n` +
+      `🔍 **Solscan $WinLEW Stats**\n` +
       `• **Price**: $${info.price.toFixed(6)}\n` +
       (info.symbol ? `• **Symbol**: ${info.symbol}\n` : '') +
-      (info.name ? `• **Name**: ${info.name}\n` : '') +
-      `• [View on Pump.fun](${info.url})`
+      `• [View on Solscan](${info.url})`
     );
   } catch (err) {
-    await message.reply('❌ Error fetching Pump.Fun data: ' + (err.message || err));
+    await message.reply('❌ Error fetching Solscan data: ' + (err.message || err));
   }
       break;
       }
@@ -811,6 +825,7 @@ cron.schedule('2 * * * *', async () => {
   try {
     const result = await fetchBestPrice();
     const price = result?.price || Number(result);
+    if (!price || isNaN(price)) { console.error('[CRON] Skipping voice rename — invalid price'); return; }
     const channel = await client.channels.fetch(VOICE_CHANNEL_ID);
     if (channel && typeof channel.isVoiceBased === "function" && channel.isVoiceBased()) {
       await channel.setName(`💰 WinLEW: $${Number(price).toFixed(6)}`);
@@ -828,6 +843,7 @@ cron.schedule('4 * * * *', async () => {
   try {
     const result = await fetchBestPrice();
     const price = result?.price || Number(result);
+    if (!price || isNaN(price)) { console.error('[CRON] Skipping price rename — invalid price'); return; }
     const channel = await client.channels.fetch(PRICE_CHANNEL_ID);
     if (!channel) {
       console.error('PRICE_CHANNEL_ID not found!');
@@ -840,4 +856,6 @@ cron.schedule('4 * * * *', async () => {
 });
 
 // ─── Start Bot ───────────────────────────────────────────────
+loadLastTweetId();
+loadTwitterUserId().catch(e => console.error('[Twitter] Failed to load user ID:', e));
 client.login(DISCORD_BOT_TOKEN);
