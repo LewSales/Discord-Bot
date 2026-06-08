@@ -1,18 +1,18 @@
-// sendWinlew.js
-const fs = require('fs');
-const path = require('path');
-const {
+// sendWinlew-Devnet.js
+import fs from 'fs';
+import path from 'path';
+import {
   Connection,
   PublicKey,
   Keypair,
   clusterApiUrl,
-} = require('@solana/web3.js');
-const {
+} from '@solana/web3.js';
+import {
   getOrCreateAssociatedTokenAccount,
   transfer,
-} = require('@solana/spl-token');
+} from '@solana/spl-token';
 
-// 1) Load your faucet wallet from ~/.config/solana/id.json
+// 1) Load your devnet faucet wallet from ~/.config/solana/id.json
 const idPath = path.join(
   process.env.HOME || process.env.USERPROFILE,
   '.config',
@@ -28,62 +28,59 @@ const secretKey = Uint8Array.from(
 );
 const faucetWallet = Keypair.fromSecretKey(secretKey);
 
-// 2) Set up the mint and connection
-const WINLEW_MINT = new PublicKey(
-  'DnrcdQVH7fdbmm4EyD7LjT9mNNozF5HuWMeKcpvjpump'
-);
+// 2) Connect to Devnet
 const connection = new Connection(
   clusterApiUrl('devnet'),
   'confirmed'
 );
 
-;(async () => {
-  // 3) Grab & trim the recipient from argv
+// 3) Your mint
+const WINLEW_MINT = new PublicKey(
+  process.env.WINLEW_MINT || 'DnrcdQVH7fdbmm4EyD7LjT9mNNozF5HuWMeKcpvjpump'
+);
+
+(async () => {
+  // 4) Grab & validate recipient
   const raw = process.argv[2];
   if (!raw) {
-    console.error('Usage: node sendWinlew.js <recipient_wallet>');
+    console.error('Usage: node sendWinlew-Devnet.js <recipient_wallet>');
     process.exit(1);
   }
-  const recipientStr = raw.trim();
-
-  // 4) Validate / construct the PublicKey
   let recipient;
   try {
-    recipient = new PublicKey(recipientStr);
-  } catch (err) {
-    console.error(
-      `⛔ Invalid recipient address—make sure it’s pure Base58:\n> ${recipientStr}`
-    );
+    recipient = new PublicKey(raw.trim());
+  } catch {
+    console.error(`⛔ Invalid address: ${raw}`);
     process.exit(1);
   }
 
   try {
-    // 5) Derive or create token accounts
-    const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+    // 5) Find or create associated token accounts
+    const fromAta = await getOrCreateAssociatedTokenAccount(
       connection,
       faucetWallet,
       WINLEW_MINT,
       faucetWallet.publicKey
     );
-    const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+    const toAta = await getOrCreateAssociatedTokenAccount(
       connection,
       faucetWallet,
       WINLEW_MINT,
       recipient
     );
 
-    // 6) Send 1 token ( adjust decimals to your mint )
+    // 6) Send 1 $WinLEW (adjust for your decimals)
     const amount = 1 * 10 ** 6;
-    const signature = await transfer(
+    const sig = await transfer(
       connection,
       faucetWallet,
-      fromTokenAccount.address,
-      toTokenAccount.address,
+      fromAta.address,
+      toAta.address,
       faucetWallet.publicKey,
       amount
     );
 
-    console.log('✅ Sent $WinLEW! Tx Signature:', signature);
+    console.log('✅ Sent $WinLEW on Devnet! Tx:', sig);
   } catch (err) {
     console.error('❌ Error sending tokens:', err);
     process.exit(1);

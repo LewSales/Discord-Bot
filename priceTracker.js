@@ -84,7 +84,7 @@ export async function fetchPriceBySource(sourceName, id) {
     case 'dexscreener':
       return await tryFetchWithIds('DexScreener', fetchDexScreenerPrice, id ? [id] : uniq([DEXSCREENER_PAIR_ID, WINLEW2_POOL_ID, WINLEW_POOL_ID]));
    case 'solscan':
-      return await tryFetchWithIds('SolScan', fetchSolScanPrice, id ? [id] : solscanIds);
+      return await tryFetchWithIds('SolScan', fetchSolScanPrice, id ? [id] : uniq([WINLEW_MINT, SOLSCAN_RAYDIUM_ID, SOLSCAN_PUMP_ID]));
     default:
       // Dynamic import fallback
       return await fetchFromDynamicSource(sourceName, id);

@@ -10,7 +10,8 @@ export async function fetchRaydiumPrice(id = POOL_ID) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Raydium HTTP ${res.status}`);
   const json = await res.json();
-  const data = json[id];
+  // API returns either { [id]: {...} } or { data: [{id, ...}] } depending on version
+  const data = json[id] ?? json.data?.find(p => p.id === id) ?? json.data?.[0];
   if (!data || !data.price) throw new Error('No valid price from Raydium');
   return {
     price: Number(data.price),
